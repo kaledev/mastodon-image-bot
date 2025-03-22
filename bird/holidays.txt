@@ -1,0 +1,148 @@
+Date,Name,Type
+1/1/2025,New Year's Day,Holiday
+1/9/2025,National Day of Mourning for Jimmy Carter,Holiday
+1/13/2025,Stephen Foster Memorial Day,Observance
+1/20/2025,Martin Luther King Jr. Day,Holiday
+1/20/2025,Inauguration Day,Holiday
+1/29/2025,Lunar New Year,Observance
+2/1/2025,National Freedom Day,Observance
+2/2/2025,Groundhog Day,Observance
+2/5/2025,National Girls and Women in Sports Day,Observance
+2/14/2025,Valentine's Day,Observance
+2/17/2025,Presidents' Day,Holiday
+3/1/2025,First Day of Women's History Month,Observance
+3/4/2025,Shrove Tuesday/Mardi Gras,Observance
+3/17/2025,St. Patrick's Day,Holiday
+3/20/2025,March Equinox,Season
+3/29/2025,National Vietnam War Veterans Day,Observance
+3/30/2025,Doctors' Day,Observance
+4/13/2025,Thomas Jefferson's Birthday,Observance
+4/15/2025,Tax Day,Observance
+4/20/2025,Easter Sunday,Observance
+4/21/2025,Easter Monday,Observance
+4/24/2025,Take our Daughters and Sons to Work Day,Observance
+5/1/2025,Law Day,Observance
+5/1/2025,Loyalty Day,Observance
+5/1/2025,National Day of Prayer,Observance
+5/1/2025,First Day of Military Appreciation Month,Observance
+5/5/2025,Cinco de Mayo,Observance
+5/8/2025,Victory in Europe Day,Observance
+5/11/2025,Mother's Day,Observance
+5/15/2025,Peace Officers Memorial Day,Observance
+5/16/2025,National Defense Transportation Day,Observance
+5/17/2025,Armed Forces Day,Observance
+5/22/2025,National Maritime Day,Observance
+5/26/2025,Memorial Day,Holiday
+6/1/2025,First Day of Pride Month,Observance
+6/6/2025,D-Day,Observance
+6/12/2025,Loving Day,Observance
+6/14/2025,Flag Day,Observance
+6/15/2025,Father's Day,Observance
+6/19/2025,Juneteenth,Holiday
+6/20/2025,American Eagle Day,Observance
+6/20/2025,June Solstice,Season
+7/4/2025,Independence Day,Holiday
+7/27/2025,Parents' Day,Observance
+7/27/2025,National Korean War Veterans Armistice Day,Observance
+8/7/2025,Purple Heart Day,Observance
+8/19/2025,National Aviation Day,Observance
+9/1/2025,Labor Day,Holiday
+9/6/2025,Carl Garner Federal Lands Cleanup Day,Observance
+9/7/2025,National Grandparents Day,Observance
+9/11/2025,Patriot Day,Observance
+9/17/2025,Constitution Day and Citizenship Day,Observance
+9/19/2025,National POW/MIA Recognition Day,Observance
+9/22/2025,September Equinox,Season
+9/27/2025,National Public Lands Day,Observance
+9/28/2025,Gold Star Mother's Day,Observance
+10/6/2025,German American Day,Observance
+10/6/2025,Child Health Day,Observance
+10/13/2025,Columbus Day,Holiday
+10/15/2025,White Cane Safety Day,Observance
+10/31/2025,Halloween,Observance
+11/4/2025,Election Day,Observance
+11/11/2025,Veterans Day,Holiday
+11/27/2025,Thanksgiving Day,Holiday
+11/28/2025,Black Friday,Observance
+12/1/2025,Cyber Monday,Observance
+12/7/2025,Pearl Harbor Remembrance Day,Observance
+12/15/2025,Bill of Rights Day,Observance
+12/17/2025,Pan American Aviation Day,Observance
+12/17/2025,Wright Brothers Day,Observance
+12/21/2025,December Solstice,Season
+12/24/2025,Christmas Eve,Observance
+12/25/2025,Christmas Day,Holiday
+12/31/2025,New Year's Eve,Observance
+1/1/2026,New Year's Day,Holiday
+1/13/2026,Stephen Foster Memorial Day,Observance
+1/19/2026,Martin Luther King Jr. Day,Holiday
+2/1/2026,National Freedom Day,Observance
+2/2/2026,Groundhog Day,Observance
+2/4/2026,National Girls and Women in Sports Day,Observance
+2/14/2026,Valentine's Day,Observance
+2/16/2026,Presidents' Day,Holiday
+2/17/2026,Shrove Tuesday/Mardi Gras,Observance
+2/17/2026,Lunar New Year,Observance
+3/1/2026,First Day of Women's History Month,Observance
+3/17/2026,St. Patrick's Day,Observance
+3/20/2026,March Equinox,Season
+3/29/2026,National Vietnam War Veterans Day,Observance
+3/30/2026,Doctors' Day,Observance
+4/5/2026,Easter Sunday,Observance
+4/6/2026,Easter Monday,Observance
+4/13/2026,Thomas Jefferson's Birthday,Observance
+4/15/2026,Tax Day,Observance
+4/23/2026,Take our Daughters and Sons to Work Day,Observance
+5/1/2026,Law Day,Observance
+5/1/2026,Loyalty Day,Observance
+5/1/2026,First Day of Military Appreciation Month,Observance
+5/5/2026,Cinco de Mayo,Observance
+5/7/2026,National Day of Prayer,Observance
+5/8/2026,Victory in Europe Day,Observance
+5/10/2026,Mother's Day,Observance
+5/15/2026,Peace Officers Memorial Day,Observance
+5/15/2026,National Defense Transportation Day,Observance
+5/16/2026,Armed Forces Day,Observance
+5/22/2026,National Maritime Day,Observance
+5/25/2026,Memorial Day,Holiday
+6/1/2026,First Day of Pride Month,Observance
+6/6/2026,D-Day,Observance
+6/12/2026,Loving Day,Observance
+6/14/2026,Flag Day,Observance
+6/19/2026,Juneteenth,Holiday
+6/20/2026,American Eagle Day,Observance
+6/21/2026,Father's Day,Observance
+6/21/2026,June Solstice,Season
+7/3/2026,Independence Day (substitute),Holiday
+7/4/2026,Independence Day,Holiday
+7/26/2026,Parents' Day,Observance
+7/27/2026,National Korean War Veterans Armistice Day,Observance
+8/7/2026,Purple Heart Day,Observance
+8/19/2026,National Aviation Day,Observance
+9/7/2026,Labor Day,Holiday
+9/11/2026,Patriot Day,Observance
+9/12/2026,Carl Garner Federal Lands Cleanup Day,Observance
+9/13/2026,National Grandparents Day,Observance
+9/17/2026,Constitution Day and Citizenship Day,Observance
+9/18/2026,National POW/MIA Recognition Day,Observance
+9/22/2026,September Equinox,Season
+9/26/2026,National Public Lands Day,Observance
+9/27/2026,Gold Star Mother's Day,Observance
+10/5/2026,Child Health Day,Observance
+10/6/2026,German American Day,Observance
+10/12/2026,Columbus Day,Holiday
+10/15/2026,White Cane Safety Day,Observance
+10/31/2026,Halloween,Observance
+11/3/2026,Election Day,Observance
+11/11/2026,Veterans Day,Holiday
+11/26/2026,Thanksgiving Day,Holiday
+11/27/2026,Black Friday,Observance
+11/30/2026,Cyber Monday,Observance
+12/7/2026,Pearl Harbor Remembrance Day,Observance
+12/15/2026,Bill of Rights Day,Observance
+12/17/2026,Pan American Aviation Day,Observance
+12/17/2026,Wright Brothers Day,Observance
+12/21/2026,December Solstice,Season
+12/24/2026,Christmas Eve,Observance
+12/25/2026,Christmas Day,Holiday
+12/31/2026,New Year's Eve,Observance
