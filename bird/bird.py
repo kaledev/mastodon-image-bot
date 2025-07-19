@@ -184,7 +184,7 @@ def generate_prompt():
         chosen = random.choice(matches)
         print(f"[INFO] Chosen holiday: {chosen}")
         holiday_name = chosen["Name"]
-        extra = f' The bird is celebrating the "{holiday_name}" {chosen["Type"].lower()} with various decorations and apparel.'
+        extra = f' The bird is dressed in festive apparel appropriate for the "{holiday_name}" {chosen["Type"].lower()}, surrounded by decorations and objects that clearly represent the "{holiday_name}" {chosen["Type"].lower()}.'
         updated_prompt = base_prompt + extra
     else:
         print("[INFO] No matches found for today. Using base prompt.")
