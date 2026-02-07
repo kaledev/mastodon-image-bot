@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 import os
 from mastodon import Mastodon
-import openai
 from openai import OpenAI
 import requests
 from io import BytesIO
@@ -21,8 +20,9 @@ load_dotenv()
 
 ERROR_FILE = "birdbot_error_time.txt"
 
-# File paths for prompts and holiday data
+# File paths for prompts and other data
 HOLIDAYS_FILE = 'holidays.txt'
+JOBS_FILE = 'jobs.txt'
 PROMPT_FILE = 'prompt.txt'
 PROMPT_BASE_FILE = 'prompt_base.txt'
 
@@ -123,18 +123,27 @@ def generate_image(prompt: str) -> bytes:
     """Generate an image using DALL-E from the given prompt."""
     print(f"[INFO] Generating image with prompt: {prompt}")
     response = client.images.generate(
-        model="dall-e-3",
+        model="gpt-image-1-mini",
         prompt=prompt,
-        size="1024x1024",
-        quality="standard",
+        size="auto",
         n=1,
     )
-    image_url = response.data[0].url
-    print(f"[INFO] Image generated. Downloading from {image_url}...")
-    image_response = requests.get(image_url)
-    image_response.raise_for_status()
-    print("[INFO] Image downloaded successfully.")
-    return image_response.content
+
+    item = response.data[0]
+
+    # Preferred path for GPT Image models
+    if hasattr(item, "b64_json") and item.b64_json:
+        print("[INFO] Received base64 image payload.")
+        return base64.b64decode(item.b64_json)
+
+    # Fallback (should not happen, but safe)
+    if hasattr(item, "url") and item.url:
+        print(f"[INFO] Received URL payload. Downloading from {item.url}...")
+        r = requests.get(item.url)
+        r.raise_for_status()
+        return r.content
+
+    raise RuntimeError("No image data returned (neither b64_json nor url).")
 
 def post_image_to_mastodon(image_bytes: bytes, status_text: str, alt_text: str):
     """Post the generated image to Mastodon with alt text and status."""
@@ -144,18 +153,16 @@ def post_image_to_mastodon(image_bytes: bytes, status_text: str, alt_text: str):
     mastodon.status_post(status=status_text, media_ids=[media['id']])
     print("[INFO] Status posted successfully.")
 
-def load_prompt_from_file(file_path):
-    """Load a prompt from the specified file."""
-    try:
-        with open(file_path, 'r') as file:
-            prompt = file.read().strip()
-            return prompt
-    except Exception as e:
-        print(f"[ERROR] Error loading prompt from file: {e}")
-        return None
+def get_random_job():
+    if not os.path.exists(JOBS_FILE):
+        print(f"[ERROR] Jobs file '{JOBS_FILE}' not found.")
+        sys.exit(1)
+    with open(JOBS_FILE, 'r') as f:
+        jobs = [line.strip() for line in f if line.strip()]
+    return random.choice(jobs)
 
 def generate_prompt():
-    """Generate a prompt by combining the base prompt and any matching holiday info."""
+    """Generate a prompt by combining the base prompt with a random job and any matching holiday."""
     today = datetime.now().strftime('%-m/%-d/%Y')
     print(f"[INFO] Today's date: {today}")
 
@@ -167,34 +174,39 @@ def generate_prompt():
         base_prompt = f.read().strip()
     print(f"[INFO] Base prompt read from '{PROMPT_BASE_FILE}'")
 
-    matches = []
-    if not os.path.exists(HOLIDAYS_FILE):
-        print(f"[ERROR] Holidays file '{HOLIDAYS_FILE}' not found.")
-        sys.exit(1)
+    # Job substitution
+    job = get_random_job()
+    base_prompt = base_prompt.replace('{job}', job)
+    print(f"[INFO] Random job selected: {job}")
 
-    with open(HOLIDAYS_FILE, 'r', newline='') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if row['Date'] == today:
-                matches.append(row)
-
+    # Holiday substitution
     holiday_name = None
-    if matches:
-        print(f"[INFO] Found {len(matches)} match(es) for today's date.")
-        chosen = random.choice(matches)
-        print(f"[INFO] Chosen holiday: {chosen}")
-        holiday_name = chosen["Name"]
-        extra = f' The bird is dressed in festive apparel appropriate for the "{holiday_name}" {chosen["Type"].lower()}, surrounded by decorations and objects that clearly represent the "{holiday_name}" {chosen["Type"].lower()}.'
-        updated_prompt = base_prompt + extra
-    else:
-        print("[INFO] No matches found for today. Using base prompt.")
-        updated_prompt = base_prompt
+    holiday_text = ''
+    if os.path.exists(HOLIDAYS_FILE):
+        matches = []
+        with open(HOLIDAYS_FILE, 'r', newline='') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row['Date'] == today:
+                    matches.append(row)
+
+        if matches:
+            chosen = random.choice(matches)
+            print(f"[INFO] Chosen holiday: {chosen}")
+            holiday_name = chosen["Name"]
+            holiday_text = (
+                f' It is also "{holiday_name}" ({chosen["Type"].lower()}), '
+                f'so the workplace is decorated accordingly and the goose '
+                f'is wearing a small festive accessory.'
+            )
+
+    base_prompt = base_prompt.replace('{holiday}', holiday_text)
+    print(f"[INFO] Final prompt: {base_prompt}")
 
     with open(PROMPT_FILE, 'w') as f:
-        f.write(updated_prompt + '\n')
+        f.write(base_prompt + '\n')
 
-    print(f"[INFO] Updated prompt written to '{PROMPT_FILE}':\n{updated_prompt}")
-    return updated_prompt, holiday_name
+    return base_prompt, holiday_name
 
 def main_loop():
     """Main loop that runs the bot, checking for errors and waiting until 9 AM between runs."""
@@ -216,22 +228,22 @@ def main_loop():
 
             # Build the Mastodon status message
             if holiday_name:
-                status_text = f"Here's a random floofy-headed bird celebrating \"{holiday_name}\" - generated by AI!\n#floofy #bird #birds #ai #nature"
-                email_body_text = f"Here's a random floofy-headed bird celebrating \"{holiday_name}\" - generated by AI!"
+                status_text = f"Here's a random silly goose celebrating \"{holiday_name}\" - generated by AI!\n#bird #birds #goose #geese #ai #nature"
+                email_body_text = f"Here's a random silly goose celebrating \"{holiday_name}\" - generated by AI!"
             else:
-                status_text = "Here's a random floofy-headed bird - generated by AI!\n#floofy #bird #birds #ai #nature"
-                email_body_text = f"Here's a random floofy-headed bird celebrating \"{holiday_name}\" - generated by AI!"
+                status_text = "Here's a random silly goose - generated by AI!\n#bird #birds #goose #geese #ai #nature"
+                email_body_text = "Here's a random silly goose - generated by AI!"
 
             # Post image to Mastodon
             post_image_to_mastodon(
                 image_bytes,
                 status_text,
-                "Here's a random floofy-headed bird - generated by AI!"
+                "Here's a random silly goose - generated by AI!"
             )
 
             # Send image via email
             send_email(
-                subject="Your Floofy-Headed Bird Image",
+                subject="Your Silly Goose Image",
                 body=email_body_text,
                 image_bytes=image_bytes,
                 to_email=EMAIL_ADDRESS
