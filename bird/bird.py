@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 import os
 from mastodon import Mastodon
-from openai import OpenAI
+import fal_client
 import requests
 from io import BytesIO
 import time
@@ -30,8 +30,8 @@ PROMPT_BASE_FILE = 'prompt_base.txt'
 MASTODON_BASE_URL = os.getenv('MASTODON_BASE_URL')
 MASTODON_ACCESS_TOKEN = os.getenv('MASTODON_ACCESS_TOKEN')
 
-# OpenAI API credentials
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+# Fal-AI API credentials
+FAL_KEY = os.getenv('FAL_KEY')
 
 # Set up Mastodon API client
 print("[INFO] Setting up Mastodon API client...")
@@ -42,10 +42,6 @@ mastodon = Mastodon(
 
 #Grab email address from environment variable
 EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS')
-
-# Set up OpenAI API client
-print("[INFO] Setting up OpenAI API client...")
-client = OpenAI(api_key=OPENAI_API_KEY)
 
 def time_until_next_run(target_hour=9):
     """Calculate the time until the next target hour (9 AM by default)."""
@@ -120,30 +116,21 @@ def send_email(subject: str, body: str, image_bytes: bytes, to_email: str):
         print(f"[ERROR] An error occurred while sending the email: {e}")
 
 def generate_image(prompt: str) -> bytes:
-    """Generate an image using DALL-E from the given prompt."""
+    """Generate an image using fal.ai FLUX 2 Pro model from the given prompt."""
     print(f"[INFO] Generating image with prompt: {prompt}")
-    response = client.images.generate(
-        model="gpt-image-1-mini",
-        prompt=prompt,
-        size="auto",
-        n=1,
-    )
+    result = fal_client.subscribe(
+    "fal-ai/flux-2-pro",
+    arguments={
+        "prompt": prompt,
+        "image_size": "square_hd"
+    }
+)
 
-    item = response.data[0]
-
-    # Preferred path for GPT Image models
-    if hasattr(item, "b64_json") and item.b64_json:
-        print("[INFO] Received base64 image payload.")
-        return base64.b64decode(item.b64_json)
-
-    # Fallback (should not happen, but safe)
-    if hasattr(item, "url") and item.url:
-        print(f"[INFO] Received URL payload. Downloading from {item.url}...")
-        r = requests.get(item.url)
-        r.raise_for_status()
-        return r.content
-
-    raise RuntimeError("No image data returned (neither b64_json nor url).")
+    image_url = result['images'][0]['url']
+    print(f"[INFO] Downloading image from {image_url}")
+    r = requests.get(image_url)
+    r.raise_for_status()
+    return r.content
 
 def post_image_to_mastodon(image_bytes: bytes, status_text: str, alt_text: str):
     """Post the generated image to Mastodon with alt text and status."""
