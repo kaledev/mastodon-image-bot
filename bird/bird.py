@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 import os
 from mastodon import Mastodon
-import fal_client
+from openai import OpenAI
 import requests
 from io import BytesIO
 import time
@@ -22,7 +22,6 @@ ERROR_FILE = "birdbot_error_time.txt"
 
 # File paths for prompts and other data
 HOLIDAYS_FILE = 'holidays.txt'
-JOBS_FILE = 'jobs.txt'
 PROMPT_FILE = 'prompt.txt'
 PROMPT_BASE_FILE = 'prompt_base.txt'
 
@@ -30,8 +29,8 @@ PROMPT_BASE_FILE = 'prompt_base.txt'
 MASTODON_BASE_URL = os.getenv('MASTODON_BASE_URL')
 MASTODON_ACCESS_TOKEN = os.getenv('MASTODON_ACCESS_TOKEN')
 
-# Fal-AI API credentials
-FAL_KEY = os.getenv('FAL_KEY')
+# OpenAI API credentials
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 # Set up Mastodon API client
 print("[INFO] Setting up Mastodon API client...")
@@ -42,6 +41,10 @@ mastodon = Mastodon(
 
 #Grab email address from environment variable
 EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS')
+
+# Set up OpenAI API client
+print("[INFO] Setting up OpenAI API client...")
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 def time_until_next_run(target_hour=9):
     """Calculate the time until the next target hour (9 AM by default)."""
@@ -116,21 +119,30 @@ def send_email(subject: str, body: str, image_bytes: bytes, to_email: str):
         print(f"[ERROR] An error occurred while sending the email: {e}")
 
 def generate_image(prompt: str) -> bytes:
-    """Generate an image using fal.ai FLUX 2 Pro model from the given prompt."""
+    """Generate an image using OpenAI from the given prompt."""
     print(f"[INFO] Generating image with prompt: {prompt}")
-    result = fal_client.subscribe(
-    "fal-ai/flux-2-pro",
-    arguments={
-        "prompt": prompt,
-        "image_size": "square_hd"
-    }
-)
+    response = client.images.generate(
+        model="gpt-image-1-mini",
+        prompt=prompt,
+        size="auto",
+        n=1,
+    )
 
-    image_url = result['images'][0]['url']
-    print(f"[INFO] Downloading image from {image_url}")
-    r = requests.get(image_url)
-    r.raise_for_status()
-    return r.content
+    item = response.data[0]
+
+    # Preferred path for GPT Image models
+    if hasattr(item, "b64_json") and item.b64_json:
+        print("[INFO] Received base64 image payload.")
+        return base64.b64decode(item.b64_json)
+
+    # Fallback (should not happen, but safe)
+    if hasattr(item, "url") and item.url:
+        print(f"[INFO] Received URL payload. Downloading from {item.url}...")
+        r = requests.get(item.url)
+        r.raise_for_status()
+        return r.content
+
+    raise RuntimeError("No image data returned (neither b64_json nor url).")
 
 def post_image_to_mastodon(image_bytes: bytes, status_text: str, alt_text: str):
     """Post the generated image to Mastodon with alt text and status."""
@@ -141,12 +153,15 @@ def post_image_to_mastodon(image_bytes: bytes, status_text: str, alt_text: str):
     print("[INFO] Status posted successfully.")
 
 def get_random_job():
-    if not os.path.exists(JOBS_FILE):
-        print(f"[ERROR] Jobs file '{JOBS_FILE}' not found.")
-        sys.exit(1)
-    with open(JOBS_FILE, 'r') as f:
-        jobs = [line.strip() for line in f if line.strip()]
-    return random.choice(jobs)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You suggest a single funny job for a goose to do. It should be wholesome, visual, and absurd. Respond with only the job description phrase, like 'zamboni driver on an ice rink'. No explanation, no punctuation at the end."},
+            {"role": "user", "content": "Give me a job for today's goose."}
+        ],
+        max_tokens=30
+    )
+    return response.choices[0].message.content.strip()
 
 def generate_prompt():
     """Generate a prompt by combining the base prompt with a random job and any matching holiday."""
@@ -196,52 +211,52 @@ def generate_prompt():
     return base_prompt, holiday_name
 
 def main_loop():
-    """Main loop that runs the bot, checking for errors and waiting until 9 AM between runs."""
     while True:
-
-        # Check if we should retry based on the last error
+        # Check if we're in a 24-hour backoff period from a previous failure
         if not should_retry():
-            time.sleep(3600)  # Check again in 1 hour if still within the error wait period
+            time.sleep(3600)
             continue
 
-        try:
-            print("[INFO] Starting a new loop iteration...")
+        success = False
+        for attempt in range(3):
+            try:
+                print(f"[INFO] Starting attempt {attempt + 1} of 3...")
 
-            # Generate the dynamic prompt before creating the image
-            image_prompt, holiday_name = generate_prompt()
+                image_prompt, holiday_name = generate_prompt()
+                image_bytes = generate_image(image_prompt)
 
-            # Generate image using the prompt
-            image_bytes = generate_image(image_prompt)
+                if holiday_name:
+                    status_text = f"Here's a random silly goose celebrating \"{holiday_name}\" - generated by AI!\n#bird #birds #goose #geese #ai #nature"
+                    email_body_text = f"Here's a random silly goose celebrating \"{holiday_name}\" - generated by AI!"
+                else:
+                    status_text = "Here's a random silly goose - generated by AI!\n#bird #birds #goose #geese #ai #nature"
+                    email_body_text = "Here's a random silly goose - generated by AI!"
 
-            # Build the Mastodon status message
-            if holiday_name:
-                status_text = f"Here's a random silly goose celebrating \"{holiday_name}\" - generated by AI!\n#bird #birds #goose #geese #ai #nature"
-                email_body_text = f"Here's a random silly goose celebrating \"{holiday_name}\" - generated by AI!"
-            else:
-                status_text = "Here's a random silly goose - generated by AI!\n#bird #birds #goose #geese #ai #nature"
-                email_body_text = "Here's a random silly goose - generated by AI!"
+                post_image_to_mastodon(image_bytes, status_text, "Here's a random silly goose - generated by AI!")
+                send_email(subject="Your Silly Goose Image", body=email_body_text, image_bytes=image_bytes, to_email=EMAIL_ADDRESS)
 
-            # Post image to Mastodon
-            post_image_to_mastodon(
-                image_bytes,
-                status_text,
-                "Here's a random silly goose - generated by AI!"
-            )
+                success = True
+                break
 
-            # Send image via email
-            send_email(
-                subject="Your Silly Goose Image",
-                body=email_body_text,
-                image_bytes=image_bytes,
-                to_email=EMAIL_ADDRESS
-            )
+            except Exception as e:
+                print(f"[ERROR] Attempt {attempt + 1} failed: {e}")
+                if attempt < 2:
+                    # Wait 10 minutes before retrying, unless 9 AM is sooner
+                    seconds_until_9am = time_until_next_run(9)
+                    wait = min(600, seconds_until_9am)
+                    if wait <= 0:
+                        # No time left in this run window, give up for today
+                        print("[INFO] No time left before next run window, giving up.")
+                        break
+                    print(f"[INFO] Retrying in {wait} seconds...")
+                    time.sleep(wait)
 
-        except Exception as e:
-            print(f"[ERROR] An unexpected error occurred: {e}. Retrying in 10 minutes...")
+        if not success:
+            # All 3 attempts failed, record error to trigger 24-hour backoff
+            print("[INFO] All attempts failed. Recording error and backing off 24 hours.")
             record_error()
-            time.sleep(600)
 
-        # Wait until 9 AM before the next iteration
+        # Wait until 9 AM for the next daily run
         seconds_until_9am = time_until_next_run(9)
         print(f"[INFO] Waiting until 9 AM. Sleeping for {seconds_until_9am} seconds...")
         time.sleep(seconds_until_9am)

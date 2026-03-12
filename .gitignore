@@ -1,3 +1,4 @@
 birdbot-env/
 .env
 birdbot_error_time.txt
+prompt.txt
