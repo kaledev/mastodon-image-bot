@@ -24,6 +24,7 @@ ERROR_FILE = "birdbot_error_time.txt"
 HOLIDAYS_FILE = 'holidays.txt'
 PROMPT_FILE = 'prompt.txt'
 PROMPT_BASE_FILE = 'prompt_base.txt'
+JOBS_FILE = 'jobs.txt'
 
 # Mastodon API credentials
 MASTODON_BASE_URL = os.getenv('MASTODON_BASE_URL')
@@ -153,15 +154,12 @@ def post_image_to_mastodon(image_bytes: bytes, status_text: str, alt_text: str):
     print("[INFO] Status posted successfully.")
 
 def get_random_job():
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You suggest a single funny job for a goose to do. It should be wholesome, visual, and absurd. Respond with only the job description phrase, like 'zamboni driver on an ice rink'. No explanation, no punctuation at the end."},
-            {"role": "user", "content": "Give me a job for today's goose."}
-        ],
-        max_tokens=30
-    )
-    return response.choices[0].message.content.strip()
+    if not os.path.exists(JOBS_FILE):
+        print(f"[ERROR] Jobs file '{JOBS_FILE}' not found.")
+        sys.exit(1)
+    with open(JOBS_FILE, 'r') as f:
+        jobs = [line.strip() for line in f if line.strip()]
+    return random.choice(jobs)
 
 def generate_prompt():
     """Generate a prompt by combining the base prompt with a random job and any matching holiday."""
